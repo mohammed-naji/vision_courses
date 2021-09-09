@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
@@ -14,7 +16,8 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categries = Category::latest()->paginate(5);
+        return view('admin.categories.index', compact('categries'));
     }
 
     /**
@@ -24,7 +27,7 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.categories.create');
     }
 
     /**
@@ -35,7 +38,22 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validate inputs
+        Validator::make($request->all(), [
+            'name' => 'required|unique:categories,name'
+        ], [
+            'required' => 'هذا الحقل مطلوب'
+        ])->validate();
+
+
+        // Add Value
+        Category::create([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name)
+        ]);
+
+        // redirect to index with message
+        return redirect()->route('categories.index')->with('success', 'Category Addedd Successfully');
     }
 
     /**
@@ -57,7 +75,7 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //
+        return view('admin.categories.edit', compact('category'));
     }
 
     /**
@@ -69,7 +87,19 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        //
+        Validator::make($request->all(), [
+            'name' => 'required'
+        ], [
+            'required' => 'هذا الحقل مطلوب'
+        ])->validate();
+
+        $category->update([
+            'name' => $request->name,
+            'slug' => Str::slug($request->name)
+        ]);
+
+        // redirect to index with message
+        return redirect()->route('categories.index')->with('success', 'Category Updated Successfully');
     }
 
     /**
@@ -80,6 +110,7 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        $category->delete();
+        return redirect()->route('categories.index')->with('success', 'Category Deleted Successfully');
     }
 }

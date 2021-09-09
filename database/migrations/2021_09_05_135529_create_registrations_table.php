@@ -15,6 +15,9 @@ class CreateRegistrationsTable extends Migration
     {
         Schema::create('registrations', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id');
+            $table->foreignId('course_id');
+            $table->boolean('status')->default(0);
             $table->timestamps();
         });
     }
