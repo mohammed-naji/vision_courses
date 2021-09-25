@@ -15,6 +15,15 @@ class PageController extends Controller
         return view('front.index', compact('courses'));
     }
 
+    public function search(Request $request)
+    {
+        // dd($request->all());
+        $courses = Course::where('name', 'like', '%' . $request->s . '%')
+        ->orWhere('content', 'like', '%' . $request->s . '%')
+        ->get();
+        return view('front.index', compact('courses'));
+    }
+
     public function course($slug)
     {
         $course = Course::where('slug', $slug)->first();

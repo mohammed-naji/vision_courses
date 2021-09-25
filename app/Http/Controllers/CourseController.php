@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Category;
+use App\Models\Registration;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -87,7 +88,8 @@ class CourseController extends Controller
      */
     public function edit(Course $course)
     {
-        //
+        $categories = Category::select(['id', 'name'])->get();
+        return view('admin.courses.edit', compact('course', 'categories'));
     }
 
     /**
@@ -99,7 +101,34 @@ class CourseController extends Controller
      */
     public function update(Request $request, Course $course)
     {
-        //
+        Validator::make($request->all(), [
+            'name' => 'required|unique:courses,name,'. $course->id,
+            'price' => 'required',
+            'content' => 'required',
+            'image' => 'nullable|image',
+            'category_id' => 'required'
+        ], [
+            'required' => 'هذا الحقل مطلوب'
+        ])->validate();
+
+        $new_img_name = $course->image;
+        if($request->has('image')) {
+            // Upload image
+            $ex = $request->file('image')->getClientOriginalExtension();
+            $new_img_name = 'vision_courses_'.time() . '.' . $ex;
+            $request->file('image')->move(public_path('uploads'), $new_img_name);
+        }
+
+        // add value
+        $course->update([
+            'name' => $request->name,
+            'price' => $request->price,
+            'content' => $request->content,
+            'image' => $new_img_name,
+            'category_id' => $request->category_id
+        ]);
+
+        return redirect()->route('courses.index')->with('success', 'Course Updated Successfully');
     }
 
     /**
@@ -112,5 +141,17 @@ class CourseController extends Controller
     {
         $course->delete();
         return redirect()->route('courses.index')->with('success', 'Course Deleted Successfully');
+    }
+
+    public function registrations()
+    {
+        $data = Registration::paginate(5);
+        return view('admin.courses.registirations', compact('data'));
+    }
+
+    public function registrationsDelete($id)
+    {
+        Registration::find($id)->delete();
+        return redirect()->route('registrations')->with('success', 'Registrations Deleted Successfully');
     }
 }
